@@ -1,4 +1,4 @@
-name: CI
+name: Windows CI
 
 on:
   push:
@@ -9,20 +9,18 @@ jobs:
   build-and-test:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
         build_type: [Debug, Release]
 
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
 
     steps:
       - uses: actions/checkout@v4
 
       - name: Configure
         run: >-
-          cmake -S . -B build
+          cmake -S . -B build -A x64
           -DREALCARS_BUILD_TESTS=ON
           -DREALCARS_ENABLE_WARNINGS_AS_ERRORS=ON
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
 
       - name: Build
         run: cmake --build build --config ${{ matrix.build_type }} --parallel

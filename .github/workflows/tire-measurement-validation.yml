@@ -48,10 +48,7 @@ jobs:
           build\model-measurement-comparison
           data\tires\reference_sport_tire.cfg
 
-      - name: Install plotting dependency
-        run: python -m pip install matplotlib
-
-      - name: Create plots
+      - name: Create parity plots
         run: >-
           python tools/plot_tire_measurement_comparison.py
           build/model-measurement-comparison/model_measurement_samples.csv

@@ -1,12 +1,11 @@
-#include "realcars/tire/LinearTireModel.hpp"
+#include "realcars/tire/BrushTireModel.hpp"
+#include "realcars/tire/BrushTireModelParametersIO.hpp"
 
-#include <cmath>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <numbers>
 #include <stdexcept>
-#include <string>
 
 namespace {
 
@@ -70,6 +69,36 @@ void write_longitudinal_sweep(
     }
 }
 
+void write_combined_sweep(
+    const realcars::tire::TireModel& model,
+    const std::filesystem::path& output_directory) {
+    std::ofstream output(output_directory / "combined_sweep.csv");
+    if (!output) {
+        throw std::runtime_error("Could not create combined_sweep.csv");
+    }
+
+    output << "slip_ratio,slip_angle_deg,normal_load_n,fx_n,fy_n,mz_nm\n";
+    constexpr double normal_load_n = 4'000.0;
+    for (int slip_percent = -20; slip_percent <= 20; ++slip_percent) {
+        const double slip_ratio = static_cast<double>(slip_percent) / 100.0;
+        for (int angle_half_degrees = -24; angle_half_degrees <= 24; ++angle_half_degrees) {
+            const double angle_deg = static_cast<double>(angle_half_degrees) / 2.0;
+            const auto forces = model.evaluate({
+                .normal_load_n = normal_load_n,
+                .slip_ratio = slip_ratio,
+                .slip_angle_rad = degrees_to_radians(angle_deg),
+                .camber_angle_rad = 0.0,
+                .road_speed_mps = 20.0,
+            });
+
+            output << slip_ratio << ',' << angle_deg << ',' << normal_load_n << ','
+                   << forces.longitudinal_force_n << ','
+                   << forces.lateral_force_n << ','
+                   << forces.aligning_moment_nm << '\n';
+        }
+    }
+}
+
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -78,11 +107,16 @@ int main(int argc, char* argv[]) {
             argc > 1 ? std::filesystem::path{argv[1]} : std::filesystem::path{"telemetry"};
         std::filesystem::create_directories(output_directory);
 
-        const realcars::tire::LinearTireModel model;
+        const auto parameters = argc > 2
+            ? realcars::tire::load_brush_tire_parameters(std::filesystem::path{argv[2]})
+            : realcars::tire::BrushTireModelParameters{};
+        const realcars::tire::BrushTireModel model{parameters};
+
         write_lateral_sweep(model, output_directory);
         write_longitudinal_sweep(model, output_directory);
+        write_combined_sweep(model, output_directory);
 
-        std::cout << "Wrote tire sweeps to " << output_directory << '\n';
+        std::cout << "Wrote brush-tire sweeps to " << output_directory << '\n';
         return 0;
     } catch (const std::exception& exception) {
         std::cerr << "Tire rig failed: " << exception.what() << '\n';

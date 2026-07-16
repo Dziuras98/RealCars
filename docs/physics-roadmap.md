@@ -26,13 +26,19 @@ Completed baseline:
 - pneumatic-trail approximation and aligning torque
 - parameter file separate from implementation
 - pure and combined CSV sweeps
+- comparative brush and linear characterization CSV
+- camber sweep and force-utilization telemetry
+- initial-gradient, sampled-peak and zero-residual summary metrics
+- exact run-parameter metadata
+- Python diagnostic plotting
+- shared tire-model contract tests and tire-rig output validation
 - automated numerical invariants and Windows Debug/Release CI
 
 Still required:
 
 - measured reference curves and parameter fitting
-- Python plotting and comparison reports
-- golden regression data with fixed tolerances
+- imported-data comparison reports and error metrics
+- golden regression data with approved fixed tolerances
 - relaxation length and transient slip states
 - temperature, pressure, wear and speed sensitivity
 - more rigorous combined-slip and aligning-torque formulations

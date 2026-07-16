@@ -1,0 +1,57 @@
+name: Tire measurement validation
+
+on:
+  pull_request:
+    paths:
+      - 'apps/tire_measurement_compare/**'
+      - 'cmake/VerifyTireMeasurementComparison.cmake'
+      - 'data/tires/**'
+      - 'include/realcars/tire/**'
+      - 'src/tire/**'
+      - 'tests/fixtures/tydex_h/**'
+      - 'tools/fetch_kit_tire_measurements.py'
+      - 'tools/plot_tire_measurement_comparison.py'
+      - '.github/workflows/tire-measurement-validation.yml'
+      - 'CMakeLists.txt'
+  workflow_dispatch:
+
+jobs:
+  compare-with-kit-measurements:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure
+        run: >-
+          cmake -S . -B build -A x64
+          -DREALCARS_BUILD_TESTS=ON
+          -DREALCARS_ENABLE_WARNINGS_AS_ERRORS=ON
+
+      - name: Build comparator
+        run: cmake --build build --config Release --target realcar_tire_measurement_compare --parallel
+
+      - name: Download KIT measurements
+        run: py tools/fetch_kit_tire_measurements.py build/kit-tire-measurements
+
+      - name: Run model-to-measurement comparison
+        run: >-
+          .\build\Release\realcar_tire_measurement_compare.exe
+          build\kit-tire-measurements
+          build\model-measurement-comparison
+          data\tires\reference_sport_tire.cfg
+
+      - name: Create plots
+        run: |
+          py -m pip install matplotlib
+          py -m py_compile tools/fetch_kit_tire_measurements.py tools/plot_tire_measurement_comparison.py
+          py tools/plot_tire_measurement_comparison.py `
+            build/model-measurement-comparison/model_measurement_samples.csv `
+            build/model-measurement-comparison/plots
+
+      - name: Upload comparison report
+        uses: actions/upload-artifact@v4
+        with:
+          name: tire-model-measurement-comparison
+          path: build/model-measurement-comparison
+          if-no-files-found: error

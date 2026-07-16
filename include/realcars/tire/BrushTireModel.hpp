@@ -15,6 +15,10 @@ struct BrushTireModelParameters {
     double camber_stiffness_at_reference_load_n_per_rad{12'000.0};
     double stiffness_load_exponent{0.90};
     double contact_patch_half_length_m{0.09};
+
+    // Retained temporarily so existing parameter files and telemetry schemas remain readable.
+    // The coupled contact-patch formulation computes Mz directly and does not use these
+    // legacy pneumatic-trail approximation parameters.
     double pneumatic_trail_fraction{0.55};
     double trail_falloff_exponent{1.50};
 };

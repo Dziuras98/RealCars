@@ -52,10 +52,32 @@ if(REALCARS_BUILD_TESTS)
     realcars_set_project_warnings(realcar_brush_tire_model_tests ${REALCARS_ENABLE_WARNINGS_AS_ERRORS})
     add_test(NAME realcar_brush_tire_model_tests COMMAND realcar_brush_tire_model_tests)
 
+    add_executable(realcar_tire_characterization_contract_tests
+        tests/test_tire_characterization_contracts.cpp
+    )
+    target_link_libraries(realcar_tire_characterization_contract_tests PRIVATE RealCars::Simulation)
+    realcars_set_project_warnings(
+        realcar_tire_characterization_contract_tests
+        ${REALCARS_ENABLE_WARNINGS_AS_ERRORS}
+    )
+    add_test(
+        NAME realcar_tire_characterization_contract_tests
+        COMMAND realcar_tire_characterization_contract_tests
+    )
+
     add_test(
         NAME realcar_tire_rig_smoke
         COMMAND realcar_tire_rig
-            "${CMAKE_CURRENT_BINARY_DIR}/test-telemetry"
+            "${CMAKE_CURRENT_BINARY_DIR}/test-telemetry-smoke"
             "${CMAKE_CURRENT_SOURCE_DIR}/data/tires/reference_sport_tire.cfg"
+    )
+
+    add_test(
+        NAME realcar_tire_rig_output_validation
+        COMMAND ${CMAKE_COMMAND}
+            "-DTIRE_RIG=$<TARGET_FILE:realcar_tire_rig>"
+            "-DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/test-telemetry-validation"
+            "-DPARAMETER_FILE=${CMAKE_CURRENT_SOURCE_DIR}/data/tires/reference_sport_tire.cfg"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/VerifyTireRigOutput.cmake"
     )
 endif()

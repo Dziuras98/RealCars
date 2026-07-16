@@ -34,6 +34,15 @@ add_executable(realcar_tire_rig
 target_link_libraries(realcar_tire_rig PRIVATE RealCars::Simulation)
 realcars_set_project_warnings(realcar_tire_rig ${REALCARS_ENABLE_WARNINGS_AS_ERRORS})
 
+add_executable(realcar_tire_measurement_compare
+    apps/tire_measurement_compare/main.cpp
+)
+target_link_libraries(realcar_tire_measurement_compare PRIVATE RealCars::Simulation)
+realcars_set_project_warnings(
+    realcar_tire_measurement_compare
+    ${REALCARS_ENABLE_WARNINGS_AS_ERRORS}
+)
+
 if(REALCARS_BUILD_TESTS)
     include(CTest)
     enable_testing()
@@ -79,5 +88,15 @@ if(REALCARS_BUILD_TESTS)
             "-DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/test-telemetry-validation"
             "-DPARAMETER_FILE=${CMAKE_CURRENT_SOURCE_DIR}/data/tires/reference_sport_tire.cfg"
             -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/VerifyTireRigOutput.cmake"
+    )
+
+    add_test(
+        NAME realcar_tire_measurement_comparison_validation
+        COMMAND ${CMAKE_COMMAND}
+            "-DCOMPARATOR=$<TARGET_FILE:realcar_tire_measurement_compare>"
+            "-DFIXTURE_DIR=${CMAKE_CURRENT_SOURCE_DIR}/tests/fixtures/tydex_h"
+            "-DOUTPUT_DIR=${CMAKE_CURRENT_BINARY_DIR}/test-measurement-comparison"
+            "-DPARAMETER_FILE=${CMAKE_CURRENT_SOURCE_DIR}/data/tires/reference_sport_tire.cfg"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/cmake/VerifyTireMeasurementComparison.cmake"
     )
 endif()

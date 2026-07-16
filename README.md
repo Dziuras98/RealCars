@@ -14,7 +14,8 @@ The current baseline contains:
 - load-sensitive friction and stiffness,
 - camber thrust and a pneumatic-trail approximation,
 - a file-based tire parameter set,
-- a command-line tire test rig producing CSV sweeps,
+- a command-line tire characterization rig producing comparative CSV sweeps,
+- summary metrics, run metadata and plotting support,
 - automated tests and Windows-only GitHub Actions CI,
 - documented SI units, coordinate conventions and model equations.
 
@@ -43,11 +44,24 @@ ctest --test-dir build --output-on-failure -C Release
 .\build\Release\realcar_tire_rig.exe telemetry data\tires\reference_sport_tire.cfg
 ```
 
-The program creates:
+The program preserves the original brush-model outputs:
 
 - `lateral_sweep.csv`,
 - `longitudinal_sweep.csv`,
 - `combined_sweep.csv`.
+
+It also creates:
+
+- `characterization_samples.csv`,
+- `characterization_summary.csv`,
+- `run_metadata.csv`.
+
+Generate diagnostic plots with:
+
+```powershell
+py -m pip install matplotlib
+py tools\plot_tire_characterization.py telemetry\characterization_samples.csv
+```
 
 ## Project rules
 
@@ -69,6 +83,7 @@ AI coding agents must read [`AGENTS.md`](AGENTS.md) before modifying the project
 - [`docs/decision-log.md`](docs/decision-log.md) — durable project decisions and consequences.
 - [`docs/development-workflow.md`](docs/development-workflow.md) — source, validation, PR and merge policy.
 - [`docs/tire-model.md`](docs/tire-model.md) — current tire equations and limitations.
+- [`docs/tire-characterization.md`](docs/tire-characterization.md) — comparative sweeps, CSV schemas, plotting workflow and validation gaps.
 - [`docs/physics-roadmap.md`](docs/physics-roadmap.md) — staged subsystem roadmap.
 - [`docs/coordinate-system.md`](docs/coordinate-system.md) — SI units, axes and sign conventions.
 - [`docs/research/tire-data-source-register.md`](docs/research/tire-data-source-register.md) — measured-data leads, model fixtures, tools, licensing constraints and unresolved tire-data gaps.

@@ -1,0 +1,19 @@
+# Build products
+/build/
+/out/
+/cmake-build-*/
+
+# Generated telemetry
+/telemetry/
+*.csv
+
+# IDEs and editors
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Operating systems
+.DS_Store
+Thumbs.db

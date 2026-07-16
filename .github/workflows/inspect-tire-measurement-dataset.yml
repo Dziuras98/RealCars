@@ -13,22 +13,55 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Inspect KIT RADAR dataset
+      - name: Probe KIT RADAR public resources
         shell: bash
         run: |
           set -euo pipefail
           rm -rf dataset-inspection
           mkdir -p dataset-inspection
-          curl --fail --location --retry 3 --dump-header dataset-inspection/doi-headers.txt \
+
+          curl --fail --location --retry 2 --max-time 30 \
+            --dump-header dataset-inspection/doi-headers.txt \
             'https://doi.org/10.35097/p0rr2jc5wmf0drf8' \
             --output dataset-inspection/landing.html
-          curl --fail --location --retry 3 \
+          curl --fail --location --retry 2 --max-time 30 \
             'https://api.datacite.org/dois/10.35097/p0rr2jc5wmf0drf8' \
             --output dataset-inspection/datacite.json
-          curl --fail --location --retry 3 \
-            'https://publikationen.bibliothek.kit.edu/1000181287' \
-            --output dataset-inspection/kitopen.html
-          python tools/inspect_tire_measurement_dataset.py dataset-inspection
+
+          urls=(
+            'https://radar.kit.edu/radar/api/datasets/p0rr2jc5wmf0drf8'
+            'https://radar.kit.edu/radar/api/datasets/p0rr2jc5wmf0drf8/download'
+            'https://www.radar-service.eu/radar/api/datasets/p0rr2jc5wmf0drf8'
+            'https://www.radar-service.eu/radar/api/datasets/p0rr2jc5wmf0drf8/download'
+            'https://radar.kit.edu/radar/en/dataset/p0rr2jc5wmf0drf8'
+          )
+          index=0
+          for url in "${urls[@]}"; do
+            printf '%s\n' "$url" > "dataset-inspection/probe-${index}-url.txt"
+            curl --location --silent --show-error --max-time 30 \
+              --write-out '%{http_code}\n%{url_effective}\n%{content_type}\n%{size_download}\n' \
+              --dump-header "dataset-inspection/probe-${index}-headers.txt" \
+              "$url" \
+              --output "dataset-inspection/probe-${index}-body.bin" \
+              > "dataset-inspection/probe-${index}-result.txt" || true
+            index=$((index + 1))
+          done
+
+          python - <<'PY'
+          from pathlib import Path
+          root = Path('dataset-inspection')
+          lines = []
+          for result in sorted(root.glob('probe-*-result.txt')):
+              stem = result.name.removesuffix('-result.txt')
+              lines.append(f'## {stem}')
+              lines.append((root / f'{stem}-url.txt').read_text(errors='replace'))
+              lines.append(result.read_text(errors='replace'))
+              body = root / f'{stem}-body.bin'
+              preview = body.read_bytes()[:4000]
+              lines.append(preview.decode('utf-8', errors='replace'))
+          (root / 'probe-report.txt').write_text('\n'.join(lines), encoding='utf-8')
+          print((root / 'probe-report.txt').read_text(encoding='utf-8'))
+          PY
 
       - name: Upload inspected dataset
         uses: actions/upload-artifact@v4

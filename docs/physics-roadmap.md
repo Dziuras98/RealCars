@@ -2,7 +2,7 @@
 
 ## Objective
 
-Build a vehicle-dynamics core that is independent from the rendering engine, deterministic at a fixed time step, observable through telemetry, and validated against measured or published data.
+Build a vehicle-dynamics core that is independent from the rendering engine, deterministic at a fixed time step, observable through telemetry, and validated against measured or published data. Windows is the only supported target platform.
 
 ## Milestone 0 — repository bootstrap
 
@@ -16,15 +16,26 @@ Build a vehicle-dynamics core that is independent from the rendering engine, det
 
 ## Milestone 1 — tire laboratory
 
-- replace the bootstrap linear model with a physically motivated brush/Fiala model
-- pure longitudinal and lateral slip
-- combined slip
+Completed baseline:
+
+- nonlinear brush/Fiala pure longitudinal and lateral force
+- combined-slip friction ellipse
 - load sensitivity
 - camber thrust
-- pneumatic trail and aligning torque
-- parameter files separate from code
-- Python plotting and parameter-fitting tools
-- reference curves and regression tolerances
+- load-sensitive stiffness
+- pneumatic-trail approximation and aligning torque
+- parameter file separate from implementation
+- pure and combined CSV sweeps
+- automated numerical invariants and Windows Debug/Release CI
+
+Still required:
+
+- measured reference curves and parameter fitting
+- Python plotting and comparison reports
+- golden regression data with fixed tolerances
+- relaxation length and transient slip states
+- temperature, pressure, wear and speed sensitivity
+- more rigorous combined-slip and aligning-torque formulations
 
 ## Milestone 2 — planar vehicle
 

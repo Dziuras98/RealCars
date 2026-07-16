@@ -18,7 +18,7 @@ Positive rotations follow the right-hand rule:
 
 ## Tire quantities
 
-The initial tire model uses these conventions:
+The tire models use these conventions:
 
 - positive slip ratio represents driven-wheel overspeed,
 - negative slip ratio represents braking slip,
@@ -27,6 +27,6 @@ The initial tire model uses these conventions:
 - tire forces are forces exerted by the road on the tire,
 - normal load is non-negative and expressed in newtons.
 
-The aligning moment returned by the bootstrap model is `Mz = -trail * Fy`.
+The aligning moment is returned as `Mz = -pneumatic_trail * Fy`. Positive slip angle therefore produces a restoring positive `Mz` under the current convention.
 
 These conventions are part of the simulation API. Changes require an explicit migration and regression-test update.

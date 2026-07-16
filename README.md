@@ -9,7 +9,7 @@ The repository starts with a standalone C++ simulation core and a headless tire 
 The current baseline contains:
 
 - a C++20 static simulation library,
-- a nonlinear brush/Fiala tire model,
+- a nonlinear brush/Fiala-style tire model,
 - pure longitudinal, pure lateral and combined slip,
 - load-sensitive friction and stiffness,
 - camber thrust and a pneumatic-trail approximation,
@@ -18,7 +18,7 @@ The current baseline contains:
 - automated tests and Windows-only GitHub Actions CI,
 - documented SI units, coordinate conventions and model equations.
 
-The included reference tire parameters are generic development values. They are not calibrated to a particular production tire.
+The included reference tire parameters are generic development values. They are not calibrated to a particular production tire. The current nonlinear model is a provisional engineering baseline and must not be described as validated until its equations and coefficients are connected to authoritative sources and measured reference data.
 
 ## Supported platform
 
@@ -57,5 +57,17 @@ The program creates:
 - Physics changes require automated tests and telemetry.
 - Plausible appearance is not accepted as validation.
 - Windows x64 is the supported runtime and CI target.
+- Never guess material physical values; use sources or obtain explicit user approval for a clearly marked provisional value.
+- Every logically separate change uses a new PR and is merged only after required tests pass.
+- Important decisions, observations, assumptions and plans must be written into the repository.
 
-See [`docs/tire-model.md`](docs/tire-model.md), [`docs/physics-roadmap.md`](docs/physics-roadmap.md) and [`docs/coordinate-system.md`](docs/coordinate-system.md).
+AI coding agents must read [`AGENTS.md`](AGENTS.md) before modifying the project.
+
+## Documentation
+
+- [`docs/project-notes.md`](docs/project-notes.md) — consolidated observations, plans, uncertainties and current status.
+- [`docs/decision-log.md`](docs/decision-log.md) — durable project decisions and consequences.
+- [`docs/development-workflow.md`](docs/development-workflow.md) — source, validation, PR and merge policy.
+- [`docs/tire-model.md`](docs/tire-model.md) — current tire equations and limitations.
+- [`docs/physics-roadmap.md`](docs/physics-roadmap.md) — staged subsystem roadmap.
+- [`docs/coordinate-system.md`](docs/coordinate-system.md) — SI units, axes and sign conventions.

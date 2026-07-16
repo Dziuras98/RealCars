@@ -72,3 +72,4 @@ AI coding agents must read [`AGENTS.md`](AGENTS.md) before modifying the project
 - [`docs/physics-roadmap.md`](docs/physics-roadmap.md) — staged subsystem roadmap.
 - [`docs/coordinate-system.md`](docs/coordinate-system.md) — SI units, axes and sign conventions.
 - [`docs/research/tire-data-source-register.md`](docs/research/tire-data-source-register.md) — measured-data leads, model fixtures, tools, licensing constraints and unresolved tire-data gaps.
+- [`docs/research/tire-data-source-register-addendum-2026-07-16.md`](docs/research/tire-data-source-register-addendum-2026-07-16.md) — second research pass covering government references, hydroplaning flow, structural dynamics, thermal studies and additional open implementations.

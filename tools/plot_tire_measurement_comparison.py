@@ -37,11 +37,11 @@ def load_rows(path: Path) -> list[dict[str, str]]:
 
 def field_names(component: str) -> tuple[str, str, str]:
     if component == "fx":
-        return "measured_fx_n", "predicted_fx_n", "Force [N]"
+        return "measured_fx_n", "predicted_fx_n", "N"
     if component == "fy":
-        return "measured_fy_n", "predicted_fy_n", "Force [N]"
+        return "measured_fy_n", "predicted_fy_n", "N"
     if component == "mz":
-        return "measured_mz_nm", "predicted_mz_nm", "Moment [N m]"
+        return "measured_mz_nm", "predicted_mz_nm", "N m"
     raise ValueError(f"Unknown component: {component}")
 
 

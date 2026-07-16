@@ -1,0 +1,21 @@
+**HEADER
+RELEASE   Release of TYDEX-Format                        1.3
+MEASID    Measurement ID                          KIT_LONG_SYNTHETIC.TDA
+
+**COMMENTS
+Synthetic parser and integration fixture. Not physical measurement data.
+
+**MEASURCHANNELS
+FYH       Lateral force                 N                  1
+FXH       Longitudinal force            N                  1
+FZH       Vertical force                N                  1
+MZH       Aligning moment               Nm              0.01
+LONGSLIP  Longitudinal slip             %               0.01
+SLIPANGL  Slip angle                    deg             0.01
+TRAJVELW  Trajectory velocity           m/s             0.01
+INCLANGL  Inclination angle             deg             0.01
+
+**MEASURDATA
+         0         0      4000         0         0         0      2000         0
+         0      1000      4000         0       100         0      2000         0
+**END

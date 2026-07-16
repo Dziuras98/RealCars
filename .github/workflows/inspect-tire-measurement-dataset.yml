@@ -13,17 +13,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download Dataverse metadata and files
+      - name: Inspect KIT RADAR dataset
         shell: bash
         run: |
           set -euo pipefail
+          rm -rf dataset-inspection
           mkdir -p dataset-inspection
+          curl --fail --location --retry 3 --dump-header dataset-inspection/doi-headers.txt \
+            'https://doi.org/10.35097/p0rr2jc5wmf0drf8' \
+            --output dataset-inspection/landing.html
           curl --fail --location --retry 3 \
-            'https://edatos.consorciomadrono.es/api/datasets/:persistentId/?persistentId=doi%3A10.21950%2FCYZEAH' \
-            --output dataset-inspection/dataset.json
+            'https://api.datacite.org/dois/10.35097/p0rr2jc5wmf0drf8' \
+            --output dataset-inspection/datacite.json
           curl --fail --location --retry 3 \
-            'https://edatos.consorciomadrono.es/api/access/dataset/:persistentId/?persistentId=doi%3A10.21950%2FCYZEAH' \
-            --output dataset-inspection/dataset.zip
+            'https://publikationen.bibliothek.kit.edu/1000181287' \
+            --output dataset-inspection/kitopen.html
           python tools/inspect_tire_measurement_dataset.py dataset-inspection
 
       - name: Upload inspected dataset

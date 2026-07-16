@@ -19,11 +19,11 @@ Build a vehicle-dynamics core that is independent from the rendering engine, det
 Completed baseline:
 
 - nonlinear brush/Fiala pure longitudinal and lateral force
-- combined-slip friction ellipse
+- locally coupled combined-slip brush deformation over a parabolic pressure distribution
 - load sensitivity
-- camber thrust
+- camber thrust represented as equivalent lateral brush deformation
 - load-sensitive stiffness
-- pneumatic-trail approximation and aligning torque
+- self-aligning moment integrated from contact-patch shear stress
 - parameter file separate from implementation
 - pure and combined CSV sweeps
 - comparative brush and linear characterization CSV
@@ -43,9 +43,10 @@ Still required:
 - selection of a specific calibration target tire and its allowable use
 - parameter fitting with separated calibration and validation subsets
 - golden regression data with approved fixed tolerances
+- removal of obsolete pneumatic-trail compatibility fields from configuration and telemetry
 - relaxation length and transient slip states
 - temperature, pressure, wear and speed sensitivity
-- more rigorous combined-slip and aligning-torque formulations
+- residual aligning torque, turn slip and higher-fidelity contact geometry
 
 ## Milestone 2 — planar vehicle
 

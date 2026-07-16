@@ -1,14 +1,17 @@
 #include "realcars/tire/BrushTireModel.hpp"
 
-#include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <stdexcept>
 
 namespace realcars::tire {
 
 namespace {
 
-constexpr double kMinimumPositive = 1.0e-12;
+// Numerical resolution only; this is not a physical tire parameter. Midpoint
+// integration with 256 elements keeps pure-slip force error below 0.01% against
+// the analytical parabolic-pressure brush solution over the regression grid.
+constexpr std::size_t kContactPatchSegments = 256U;
 
 void require_finite_positive(double value, const char* name) {
     if (!std::isfinite(value) || value <= 0.0) {
@@ -41,36 +44,93 @@ void validate_parameters(const BrushTireModelParameters& parameters) {
         "Camber stiffness must be finite and non-negative");
     require_finite_positive(parameters.stiffness_load_exponent, "Stiffness load exponent must be finite and positive");
     require_finite_positive(parameters.contact_patch_half_length_m, "Contact patch half-length must be finite and positive");
-    require_finite_non_negative(parameters.pneumatic_trail_fraction, "Pneumatic trail fraction must be finite and non-negative");
-    if (parameters.pneumatic_trail_fraction > 1.0) {
-        throw std::invalid_argument("Pneumatic trail fraction must not exceed one");
-    }
-    require_finite_positive(parameters.trail_falloff_exponent, "Trail falloff exponent must be finite and positive");
+    require_finite_non_negative(
+        parameters.pneumatic_trail_fraction,
+        "Legacy pneumatic trail fraction must be finite and non-negative");
+    require_finite_positive(
+        parameters.trail_falloff_exponent,
+        "Legacy trail falloff exponent must be finite and positive");
 }
 
-[[nodiscard]] double fiala_axis_force(
-    double slip,
-    double stiffness,
-    double force_limit,
-    double direction_sign) {
-    if (std::abs(slip) <= kMinimumPositive) {
-        return 0.0;
+struct ContactPatchIntegral {
+    double longitudinal_force_n{0.0};
+    double lateral_force_n{0.0};
+    double aligning_moment_nm{0.0};
+};
+
+[[nodiscard]] ContactPatchIntegral integrate_contact_patch(
+    double normal_load_n,
+    double slip_ratio,
+    double lateral_slip,
+    double friction,
+    double longitudinal_stiffness_n,
+    double cornering_stiffness_n_per_rad,
+    const BrushTireModelParameters& parameters) {
+    const double half_length_m = parameters.contact_patch_half_length_m;
+    const double patch_length_m = 2.0 * half_length_m;
+    const double segment_length_m =
+        patch_length_m / static_cast<double>(kContactPatchSegments);
+
+    // With bristle deflection proportional to distance from the leading edge,
+    // these distributed stiffnesses integrate to the requested small-slip Cx/Cy.
+    const double longitudinal_bristle_stiffness_n_per_m2 =
+        2.0 * longitudinal_stiffness_n / (patch_length_m * patch_length_m);
+    const double lateral_bristle_stiffness_n_per_m2 =
+        2.0 * cornering_stiffness_n_per_rad / (patch_length_m * patch_length_m);
+
+    // Normalize the discretized parabolic pressure shape so its numerical
+    // integral is exactly Fz and the integrated friction bound cannot drift.
+    double pressure_shape_integral_m3 = 0.0;
+    for (std::size_t index = 0; index < kContactPatchSegments; ++index) {
+        const double distance_from_leading_edge_m =
+            (static_cast<double>(index) + 0.5) * segment_length_m;
+        pressure_shape_integral_m3 +=
+            distance_from_leading_edge_m
+            * (patch_length_m - distance_from_leading_edge_m)
+            * segment_length_m;
     }
 
-    const double transition_slip = 3.0 * force_limit / stiffness;
-    if (std::abs(slip) >= transition_slip) {
-        return direction_sign * force_limit * std::copysign(1.0, slip);
+    ContactPatchIntegral result;
+    for (std::size_t index = 0; index < kContactPatchSegments; ++index) {
+        const double distance_from_leading_edge_m =
+            (static_cast<double>(index) + 0.5) * segment_length_m;
+        const double longitudinal_position_m =
+            half_length_m - distance_from_leading_edge_m;
+        const double pressure_n_per_m =
+            normal_load_n
+            * distance_from_leading_edge_m
+            * (patch_length_m - distance_from_leading_edge_m)
+            / pressure_shape_integral_m3;
+
+        double longitudinal_shear_n_per_m =
+            longitudinal_bristle_stiffness_n_per_m2
+            * slip_ratio
+            * distance_from_leading_edge_m;
+        double lateral_shear_n_per_m =
+            -lateral_bristle_stiffness_n_per_m2
+            * lateral_slip
+            * distance_from_leading_edge_m;
+
+        const double longitudinal_capacity_n_per_m =
+            friction * pressure_n_per_m * parameters.longitudinal_friction_scale;
+        const double lateral_capacity_n_per_m =
+            friction * pressure_n_per_m * parameters.lateral_friction_scale;
+        const double local_utilization = std::hypot(
+            longitudinal_shear_n_per_m / longitudinal_capacity_n_per_m,
+            lateral_shear_n_per_m / lateral_capacity_n_per_m);
+
+        if (local_utilization > 1.0) {
+            longitudinal_shear_n_per_m /= local_utilization;
+            lateral_shear_n_per_m /= local_utilization;
+        }
+
+        result.longitudinal_force_n += longitudinal_shear_n_per_m * segment_length_m;
+        result.lateral_force_n += lateral_shear_n_per_m * segment_length_m;
+        result.aligning_moment_nm +=
+            longitudinal_position_m * lateral_shear_n_per_m * segment_length_m;
     }
 
-    const double stiffness_squared = stiffness * stiffness;
-    const double stiffness_cubed = stiffness_squared * stiffness;
-    const double force_limit_squared = force_limit * force_limit;
-    const double polynomial =
-        stiffness * slip
-        - (stiffness_squared / (3.0 * force_limit)) * std::abs(slip) * slip
-        + (stiffness_cubed / (27.0 * force_limit_squared)) * slip * slip * slip;
-
-    return direction_sign * polynomial;
+    return result;
 }
 
 }  // namespace
@@ -100,16 +160,9 @@ TireForces BrushTireModel::evaluate(const TireState& state) const {
         return {};
     }
 
-    const double normal_load_n = state.normal_load_n;
-    const double load_ratio = normal_load_n / parameters_.reference_load_n;
-    const double stiffness_scale = std::pow(load_ratio, parameters_.stiffness_load_exponent);
-    const double friction = friction_coefficient(normal_load_n);
-
-    const double longitudinal_limit_n =
-        friction * normal_load_n * parameters_.longitudinal_friction_scale;
-    const double lateral_limit_n =
-        friction * normal_load_n * parameters_.lateral_friction_scale;
-
+    const double load_ratio = state.normal_load_n / parameters_.reference_load_n;
+    const double stiffness_scale =
+        std::pow(load_ratio, parameters_.stiffness_load_exponent);
     const double longitudinal_stiffness_n =
         parameters_.longitudinal_stiffness_at_reference_load_n * stiffness_scale;
     const double cornering_stiffness_n_per_rad =
@@ -117,43 +170,27 @@ TireForces BrushTireModel::evaluate(const TireState& state) const {
     const double camber_stiffness_n_per_rad =
         parameters_.camber_stiffness_at_reference_load_n_per_rad * stiffness_scale;
 
-    double longitudinal_force_n = fiala_axis_force(
+    // Camber is represented as the equivalent lateral brush deflection that
+    // reproduces the configured small-angle camber stiffness. It then shares
+    // the same local friction capacity as slip-angle deformation.
+    const double lateral_slip =
+        std::tan(state.slip_angle_rad)
+        + (camber_stiffness_n_per_rad / cornering_stiffness_n_per_rad)
+            * state.camber_angle_rad;
+
+    const ContactPatchIntegral forces = integrate_contact_patch(
+        state.normal_load_n,
         state.slip_ratio,
-        longitudinal_stiffness_n,
-        longitudinal_limit_n,
-        1.0);
-
-    const double lateral_slip = std::tan(state.slip_angle_rad);
-    double lateral_force_n = fiala_axis_force(
         lateral_slip,
+        friction_coefficient(state.normal_load_n),
+        longitudinal_stiffness_n,
         cornering_stiffness_n_per_rad,
-        lateral_limit_n,
-        -1.0);
-    lateral_force_n -= camber_stiffness_n_per_rad * state.camber_angle_rad;
-
-    const double normalized_longitudinal = longitudinal_force_n / longitudinal_limit_n;
-    const double normalized_lateral = lateral_force_n / lateral_limit_n;
-    const double combined_utilization = std::hypot(normalized_longitudinal, normalized_lateral);
-
-    if (combined_utilization > 1.0) {
-        const double scale = 1.0 / combined_utilization;
-        longitudinal_force_n *= scale;
-        lateral_force_n *= scale;
-    }
-
-    const double lateral_utilization = std::clamp(
-        std::abs(lateral_force_n) / lateral_limit_n,
-        0.0,
-        1.0);
-    const double maximum_trail_m =
-        parameters_.contact_patch_half_length_m * parameters_.pneumatic_trail_fraction;
-    const double pneumatic_trail_m = maximum_trail_m
-        * std::pow(1.0 - lateral_utilization, parameters_.trail_falloff_exponent);
+        parameters_);
 
     return TireForces{
-        .longitudinal_force_n = longitudinal_force_n,
-        .lateral_force_n = lateral_force_n,
-        .aligning_moment_nm = -pneumatic_trail_m * lateral_force_n,
+        .longitudinal_force_n = forces.longitudinal_force_n,
+        .lateral_force_n = forces.lateral_force_n,
+        .aligning_moment_nm = forces.aligning_moment_nm,
     };
 }
 

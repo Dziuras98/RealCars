@@ -77,3 +77,15 @@ This log records project-level decisions that should not depend on chat history.
 **Branch note:** The repository integration branch is currently named `main`; the user's phrase `master` is treated as referring to this current integration branch unless the user explicitly requests a rename.
 
 **Consequences:** Do not append unrelated work to an existing PR. Prefer squash merges unless commit preservation is technically justified.
+
+## 2026-07-16 — Coupled contact-patch brush formulation
+
+**Decision:** Replace independent pure-axis force calculation followed by a global friction ellipse with one locally saturated brush solution over a parabolic longitudinal pressure distribution. Compute `Fx`, `Fy` and `Mz` by integrating the same contact-patch shear field.
+
+**Rationale:** The KIT comparison showed that the former post-hoc ellipse over-predicted combined-slip lateral force and that the independent pneumatic-trail approximation retained excessive combined-slip aligning moment. A local adhesion/sliding construction is mechanically consistent and traceable to brush-model literature.
+
+**Sources:** SAE 2004-01-1064 (`10.4271/2004-01-1064`), Romano et al. (`10.1080/00423114.2020.1774625` and `10.1007/s11012-021-01422-3`), and O'Neill et al. (`10.1080/00423114.2021.1893766`).
+
+**Validation evidence:** Without fitting coefficients, combined `Fy` RMSE on the 843-point KIT benchmark fell from `1125 N` to `411 N`, and combined `Mz` RMSE fell from `39.2 N m` to `18.7 N m`. Combined `Fx` RMSE increased from `675 N` to `966 N`, which is recorded as an unresolved structural limitation rather than tuned away.
+
+**Consequences:** The coupled brush becomes the default nonlinear baseline. Pure-slip Fiala compatibility remains tested. Future work must investigate sourced combined-slip kinematics, anisotropic sliding direction and friction behaviour. The obsolete trail-falloff configuration fields remain readable only for temporary schema compatibility and must be removed in a separate cleanup PR.

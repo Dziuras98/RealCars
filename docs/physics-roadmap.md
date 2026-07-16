@@ -32,12 +32,16 @@ Completed baseline:
 - exact run-parameter metadata
 - Python diagnostic plotting
 - shared tire-model contract tests and tire-rig output validation
+- reproducible import of public KIT TYDEX tire-force curves
+- point-by-point brush and linear model comparison without parameter fitting
+- aggregate and per-load RMSE, MAE, bias, normalized error, R-squared and correlation
+- parity plots and a CI-published comparison artifact
 - automated numerical invariants and Windows Debug/Release CI
 
 Still required:
 
-- measured reference curves and parameter fitting
-- imported-data comparison reports and error metrics
+- selection of a specific calibration target tire and its allowable use
+- parameter fitting with separated calibration and validation subsets
 - golden regression data with approved fixed tolerances
 - relaxation length and transient slip states
 - temperature, pressure, wear and speed sensitivity

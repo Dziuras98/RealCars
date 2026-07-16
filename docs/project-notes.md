@@ -51,9 +51,12 @@ The repository currently contains:
 - lateral, longitudinal and combined-slip CSV sweeps,
 - unit/invariant tests,
 - Windows Debug and Release CI,
-- coordinate-system, tire-model and roadmap documentation.
+- coordinate-system, tire-model and roadmap documentation,
+- a tire-data source register covering measured datasets, model fixtures, tools, licensing constraints and known public-data gaps.
 
 The tire rig currently generates 4,415 numerical samples per run, excluding CSV headers.
+
+The current source register is [`docs/research/tire-data-source-register.md`](research/tire-data-source-register.md). It is a research inventory rather than a calibration decision. No source listed there is automatically approved for importing numerical coefficients.
 
 ## Tire-model observations
 
@@ -106,7 +109,7 @@ Required remediation:
 
 Recommended sequence:
 
-1. Create a source register for tire equations and parameter datasets.
+1. Maintain and extend the tire equation and parameter-data source register.
 2. Add Python plotting tools for all generated CSV sweeps.
 3. Add golden-reference data and comparison reports with fixed tolerances.
 4. Decide which real tire or published dataset will be the first calibration target.

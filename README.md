@@ -15,6 +15,7 @@ The current baseline contains:
 - camber thrust and a pneumatic-trail approximation,
 - a file-based tire parameter set,
 - a command-line tire characterization rig producing comparative CSV sweeps,
+- a TYDEX model-to-measurement comparator for public KIT tire-test data,
 - summary metrics, run metadata and plotting support,
 - automated tests and Windows-only GitHub Actions CI,
 - documented SI units, coordinate conventions and model equations.
@@ -63,6 +64,24 @@ py -m pip install matplotlib
 py tools\plot_tire_characterization.py telemetry\characterization_samples.csv
 ```
 
+## Compare the model with KIT measurements
+
+The measured data are downloaded at run time and are not stored in this repository.
+
+```powershell
+py tools\fetch_kit_tire_measurements.py build\kit-tire-measurements
+.\build\Release\realcar_tire_measurement_compare.exe `
+    build\kit-tire-measurements `
+    build\model-measurement-comparison `
+    data\tires\reference_sport_tire.cfg
+py -m pip install matplotlib
+py tools\plot_tire_measurement_comparison.py `
+    build\model-measurement-comparison\model_measurement_samples.csv `
+    build\model-measurement-comparison\plots
+```
+
+The comparison evaluates the unchanged brush and linear baselines at the measured TYDEX H states. It performs no parameter fitting.
+
 ## Project rules
 
 - SI units in the simulation core.
@@ -84,6 +103,7 @@ AI coding agents must read [`AGENTS.md`](AGENTS.md) before modifying the project
 - [`docs/development-workflow.md`](docs/development-workflow.md) — source, validation, PR and merge policy.
 - [`docs/tire-model.md`](docs/tire-model.md) — current tire equations and limitations.
 - [`docs/tire-characterization.md`](docs/tire-characterization.md) — comparative sweeps, CSV schemas, plotting workflow and validation gaps.
+- [`docs/tire-model-measurement-comparison.md`](docs/tire-model-measurement-comparison.md) — KIT data provenance, TYDEX mapping, metrics and interpretation.
 - [`docs/physics-roadmap.md`](docs/physics-roadmap.md) — staged subsystem roadmap.
 - [`docs/coordinate-system.md`](docs/coordinate-system.md) — SI units, axes and sign conventions.
 - [`docs/research/tire-data-source-register.md`](docs/research/tire-data-source-register.md) — measured-data leads, model fixtures, tools, licensing constraints and unresolved tire-data gaps.

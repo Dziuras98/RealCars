@@ -18,7 +18,7 @@ RESOURCE_TERMS = ("download", "archive", "dataset", "api", "content", "file")
 
 def fetch(url: str, destination: Path) -> tuple[int, str]:
     request = urllib.request.Request(url, headers={"User-Agent": "RealCars-dataset-inspector/1.0"})
-    with urllib.request.urlopen(request, timeout=60) as response:
+    with urllib.request.urlopen(request, timeout=15) as response:
         destination.write_bytes(response.read())
         return response.status, response.geturl()
 
@@ -48,7 +48,14 @@ def main() -> int:
         json.dumps(datacite, indent=2, ensure_ascii=False),
         "\n# DOI redirect headers",
         (output_directory / "doi-headers.txt").read_text(encoding="utf-8", errors="replace"),
+        "\n# Landing HTML fragments containing download/API terms",
     ]
+    for match in re.finditer(
+        r"[^<>\n]{0,180}(?:download|archive|dataset|api|content)[^<>\n]{0,300}",
+        landing_text,
+        re.IGNORECASE,
+    ):
+        report.append(match.group(0))
 
     all_links = extract_links(landing_text, landing_url)
     all_links.extend(extract_links(kitopen_text, "https://publikationen.bibliothek.kit.edu/1000181287"))
@@ -58,7 +65,7 @@ def main() -> int:
 
     script_links = [
         link for link in all_links if urllib.parse.urlparse(link).path.lower().endswith(".js")
-    ]
+    ][:12]
     script_directory = output_directory / "scripts"
     script_directory.mkdir(exist_ok=True)
     discovered: set[str] = set()
@@ -75,7 +82,11 @@ def main() -> int:
             lowered = candidate.lower()
             if any(term in lowered for term in RESOURCE_TERMS):
                 discovered.add(candidate)
-        for match in re.finditer(r"[^\"']{0,120}(?:download|archive|dataset|api)[^\"']{0,220}", script_text, re.IGNORECASE):
+        for match in re.finditer(
+            r"[^\"']{0,100}(?:download|archive|dataset|api)[^\"']{0,180}",
+            script_text,
+            re.IGNORECASE,
+        ):
             fragment = match.group(0).replace("\\/", "/")
             if "p0rr2jc5wmf0drf8" in fragment or "download" in fragment.lower():
                 report.append(f"SCRIPT FRAGMENT: {fragment}")

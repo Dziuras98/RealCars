@@ -74,13 +74,12 @@ py tools\fetch_kit_tire_measurements.py build\kit-tire-measurements
     build\kit-tire-measurements `
     build\model-measurement-comparison `
     data\tires\reference_sport_tire.cfg
-py -m pip install matplotlib
 py tools\plot_tire_measurement_comparison.py `
     build\model-measurement-comparison\model_measurement_samples.csv `
     build\model-measurement-comparison\plots
 ```
 
-The comparison evaluates the unchanged brush and linear baselines at the measured TYDEX H states. It performs no parameter fitting.
+The comparison evaluates the unchanged brush and linear baselines at the measured TYDEX H states. It performs no parameter fitting. The parity plots are dependency-free SVG files.
 
 ## Project rules
 

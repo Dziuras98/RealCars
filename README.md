@@ -71,3 +71,4 @@ AI coding agents must read [`AGENTS.md`](AGENTS.md) before modifying the project
 - [`docs/tire-model.md`](docs/tire-model.md) — current tire equations and limitations.
 - [`docs/physics-roadmap.md`](docs/physics-roadmap.md) — staged subsystem roadmap.
 - [`docs/coordinate-system.md`](docs/coordinate-system.md) — SI units, axes and sign conventions.
+- [`docs/research/tire-data-source-register.md`](docs/research/tire-data-source-register.md) — measured-data leads, model fixtures, tools, licensing constraints and unresolved tire-data gaps.
